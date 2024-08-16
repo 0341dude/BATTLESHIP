@@ -175,11 +175,18 @@ let playerTurn
 
 // Start Game
 function startGame() {
-    if (optionContainer.children.length != 0) {
-        infoDisplay.textContent = 'Please place all your pieces first.'
-    } else {
-        const allBoardBlocks = document.querySelectorAll('#computer div')
-        allBoardBlocks.forEach(block => block.addEventListener('click', handleClick))
+    if(playerTurn === undefined) {
+
+        if (optionContainer.children.length != 0) {
+            infoDisplay.textContent = 'Please place all your pieces first.'
+        } else {
+            const allBoardBlocks = document.querySelectorAll('#computer div')
+            allBoardBlocks.forEach(block => block.addEventListener('click', handleClick))
+
+            playerTurn = true
+            turnDisplay.textContent = "Your turn!"
+            infoDisplay.textContent = "The game has started"
+        }
     }
 }
 
@@ -187,17 +194,20 @@ startButton.addEventListener('click', startGame)
 
 let playerHits = []
 let computerHits = []
+const playerSunkShips = []
+const computerSunkShips = []
 
 function handleClick(e) {
     if (!gameOver) {
-        if (e.target.classList.contains('taken')) {
+        if (e.target.classList.contains('taken') && !e.target.classList.contains('boom')) {
             e.target.classList.add('boom')
             infoDisplay.textContent = `You've hit!`
             let classes = Array.from(e.target.classList)
-            classes.filter(className => className !== 'block')
-            classes.filter(className => className !== 'boom')
-            classes.filter(className => className !== 'taken')
+            classes = classes.filter(className => className !== 'block')
+            classes = classes.filter(className => className !== 'boom')
+            classes = classes.filter(className => className !== 'taken')
             playerHits.push(...classes)
+            checkScore('player', playerHits, playerSunkShips)
         }
     }
 
@@ -208,9 +218,9 @@ function handleClick(e) {
 
     playerTurn = false
     const allBoardBlocks = document.querySelectorAll('#computer div')
-    allPlayerBlocks.forEach(block => block.replaceWith(block.cloneNode(true)))
+    allBoardBlocks.forEach(block => block.replaceWith(block.cloneNode(true)))
 
-    setTimeout(computerGo, 3000)
+    setTimeout(computerGo, 1000)
 }
 
 // Computer Turn
@@ -233,25 +243,68 @@ function computerGo() {
                     allBoardBlocks[randomGo].classList.add('boom')
                     infoDisplay.textContent = `You've been hit!`
 
-                    let classes = Array.from(e.target.classList)
-                    classes.filter(className => className !== 'block')
-                    classes.filter(className => className !== 'boom')
-                    classes.filter(className => className !== 'taken')
+                    let classes = Array.from( allBoardBlocks[randomGo].classList)
+                    classes = classes.filter(className => className !== 'block')
+                    classes = classes.filter(className => className !== 'boom')
+                    classes = classes.filter(className => className !== 'taken')
                     computerHits.push(...classes)
+                    checkScore('computer', computerHits, computerSunkShips)
                 } else {
                     infoDisplay.textContent = "Computer missed"
                     allBoardBlocks[randomGo].classList.add('empty')
                 }
-        }, 3000)
+        }, 1000)
     }
 
     setTimeout(() => {
-        playerTurn = true
-        turnDisplay.textContent = `Your turn`
-        infoDisplay.textContent = 'Please take your shot'
-
-        const allBoardBlocks = document.querySelectorAll('#computer div')
-        allBoardBlocks.forEach(block => block.addEventListener('click', handleClick))
-    }, 6000)
+        if(!gameOver){
+            playerTurn = true
+            turnDisplay.textContent = `Your turn`
+            infoDisplay.textContent = 'Please take your shot'
+    
+            const allBoardBlocks = document.querySelectorAll('#computer div')
+            allBoardBlocks.forEach(block => block.addEventListener('click', handleClick))
+        }        
+    }, 2000)
 }
+
+function checkScore(user, userHits, userSunkShips) {
+
+    function checkShip(shipName, shipLength) {
+        if (
+            userHits.filter(storedShipName => storedShipName === shipName).length === shipLength
+        ) {
+            
+            if (user === 'player') {
+                infoDisplay.textContent = `You sunk the computer's ${shipName}`
+                playerHits = userHits.filter(storedShipName => storedShipName != shipName)
+            }
+            if (user === 'computer') {
+                infoDisplay.textContent = `Computer sunk your ${shipName}`
+                computerHits = userHits.filter(storedShipName => storedShipName != shipName)
+            }
+
+            userSunkShips.push(shipName)
+        }
+    }
+
+    checkShip('destroyer', 2)
+    checkShip('submarine', 3)
+    checkShip('cruiser', 3)
+    checkShip('battleship', 4)
+    checkShip('carrier', 5)
+
+    console.log(playerHits)
+    console.log(playerSunkShips.length)
+
+    if(playerSunkShips.length === 5) {
+        infoDisplay.textContent = "You sunk the computer's ships! WINNER!"
+        gameOver = true
+    }
+    if(computerSunkShips.length === 5) {
+        infoDisplay.textContent = "Your fleet was sunk! LOSER!"
+        gameOver = true
+    }
+}
+
 
