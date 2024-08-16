@@ -76,4 +76,16 @@
     margin: 3px;
 }
 
+.hover {
+    background-color: grey;
+}
+
+.boom {
+    background-color: red;
+}
+
+.empty {
+    background-color: grey;
+}
+
 
