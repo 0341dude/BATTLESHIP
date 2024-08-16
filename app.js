@@ -1,6 +1,9 @@
 const flipButton = document.querySelector('#flip-button')
 const gamesboardContainer = document.querySelector('#gameboard-container')
 const optionContainer = document.querySelector('.option-container')
+const startButton = document.querySelector('#start-button')
+const infoDisplay = document.querySelector('#info')
+const turnDisplay = document.querySelector('#turn-display')
 
 // Choosing options
 let angle = 0;
@@ -164,3 +167,91 @@ function highlightArea(startIndex, ship) {
         })
     }
 }
+
+// Game Logic
+
+let gameOver = false
+let playerTurn
+
+// Start Game
+function startGame() {
+    if (optionContainer.children.length != 0) {
+        infoDisplay.textContent = 'Please place all your pieces first.'
+    } else {
+        const allBoardBlocks = document.querySelectorAll('#computer div')
+        allBoardBlocks.forEach(block => block.addEventListener('click', handleClick))
+    }
+}
+
+startButton.addEventListener('click', startGame)
+
+let playerHits = []
+let computerHits = []
+
+function handleClick(e) {
+    if (!gameOver) {
+        if (e.target.classList.contains('taken')) {
+            e.target.classList.add('boom')
+            infoDisplay.textContent = `You've hit!`
+            let classes = Array.from(e.target.classList)
+            classes.filter(className => className !== 'block')
+            classes.filter(className => className !== 'boom')
+            classes.filter(className => className !== 'taken')
+            playerHits.push(...classes)
+        }
+    }
+
+    if (!e.target.classList.contains('taken')) {
+        infoDisplay.textContent = `Missed`
+        e.target.classList.add('empty')
+    }
+
+    playerTurn = false
+    const allBoardBlocks = document.querySelectorAll('#computer div')
+    allPlayerBlocks.forEach(block => block.replaceWith(block.cloneNode(true)))
+
+    setTimeout(computerGo, 3000)
+}
+
+// Computer Turn
+function computerGo() {
+    if (!gameOver) {
+        turnDisplay.textContent = `Computer's Turn`
+        infoDisplay.textContent = `Computer thinking...`
+
+        setTimeout( () => {
+            let randomGo = Math.floor(Math.random() * width * width)
+
+            const allBoardBlocks = document.querySelectorAll('#player div')
+
+            if  (allBoardBlocks[randomGo].classList.contains('taken') &&
+                allBoardBlocks[randomGo].classList.contains('boom')) {
+                    computerGo()
+                    return
+                } else if (allBoardBlocks[randomGo].classList.contains('taken') &&
+                !allBoardBlocks[randomGo].classList.contains('boom')) {
+                    allBoardBlocks[randomGo].classList.add('boom')
+                    infoDisplay.textContent = `You've been hit!`
+
+                    let classes = Array.from(e.target.classList)
+                    classes.filter(className => className !== 'block')
+                    classes.filter(className => className !== 'boom')
+                    classes.filter(className => className !== 'taken')
+                    computerHits.push(...classes)
+                } else {
+                    infoDisplay.textContent = "Computer missed"
+                    allBoardBlocks[randomGo].classList.add('empty')
+                }
+        }, 3000)
+    }
+
+    setTimeout(() => {
+        playerTurn = true
+        turnDisplay.textContent = `Your turn`
+        infoDisplay.textContent = 'Please take your shot'
+
+        const allBoardBlocks = document.querySelectorAll('#computer div')
+        allBoardBlocks.forEach(block => block.addEventListener('click', handleClick))
+    }, 6000)
+}
+
